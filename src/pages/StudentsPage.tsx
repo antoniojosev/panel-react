@@ -1,20 +1,17 @@
 import { useMemo, useState, useEffect } from 'react'
-import { Button, Box, Card, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
-import DeleteIcon from '@mui/icons-material/Delete'
-import EditIcon from '@mui/icons-material/Edit'
+import { Box, TextField, Typography } from '@mui/material'
 import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '../features/students/hooks/useStudents'
 import { useUsers } from '../features/users/hooks/useUsers'
 import { useProfile } from '../features/auth/hooks/useAuth'
 import type { Student } from '../features/students/studentTypes'
 import { useLocation } from 'react-router-dom'
 import { useHasRole } from '../utils/roleUtils'
+import StudentsTable from '../features/students/components/StudentsTable'
 import CreateStudentModal from '../features/students/components/CreateStudentModal'
 import EditStudentModal from '../features/students/components/EditStudentModal'
 import StudentDetailsModal from '../features/students/components/StudentDetailsModal'
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 import FeedbackToast from '../components/ui/FeedbackToast'
-import TableSkeleton from '../components/ui/TableSkeleton'
 import { useFeedback } from '../hooks/useFeedback'
 import { parseApiError } from '../utils/errorUtils'
 
@@ -23,7 +20,7 @@ export default function StudentsPage() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [search, setSearch] = useState('')
-  const { data: students, isLoading: isLoadingStudents } = useStudents(page + 1, rowsPerPage, search)
+  const { data: students, isLoading } = useStudents(page + 1, rowsPerPage, search)
   const { data: user } = useProfile()
   const isAdmin = useHasRole(['admin'])
   const { data: usersData } = isAdmin ? useUsers() : { data: null }
@@ -57,14 +54,16 @@ export default function StudentsPage() {
     return []
   }, [usersData, user, isAdmin])
 
-  const displayStudents = students?.data || []
+  const handleError = (error: unknown) => {
+    feedback.showError(parseApiError(error))
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', minHeight: 0, padding: 1 }}>
       <div>
         <Typography variant="h4" gutterBottom>Estudiantes</Typography>
         <Typography color='textDisabled' variant="subtitle1" gutterBottom>
-          Gestiona la informacion de estudiantes, cursos y progreso
+          Gestiona la información de estudiantes, cursos y progreso
         </Typography>
         <TextField
           label="Buscar estudiante"
@@ -76,76 +75,19 @@ export default function StudentsPage() {
         />
       </div>
 
-      <Card sx={{ mb: 3, backgroundColor: 'background.paper', boxShadow: 2, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-        <TableContainer component={Box} sx={{ background: 'transparent', minHeight: 0, height: '80%', maxHeight: '80%', overflowY: 'auto', overflowX: 'auto' }}>
-          <Table stickyHeader sx={{ minWidth: 600 }}>
-            <TableHead sx={{ background: 'transparent', '& .MuiTableCell-head': { background: 'transparent', borderBottom: 'none' } }}>
-              <TableRow sx={{ background: 'transparent' }}>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Nombre</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Email</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent', display: { xs: 'none', sm: 'table-cell' } }}>Institucion</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Curso</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Progreso</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent', display: { xs: 'none', md: 'table-cell' } }}>Status</TableCell>
-                <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent', display: { xs: 'none', lg: 'table-cell' } }}>Instructor</TableCell>
-                <TableCell align="right" sx={{ background: 'transparent' }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => setOpenModal(true)}
-                    sx={{ backgroundColor: 'background.paper', color: 'primary.main', minWidth: 0, p: 1, boxShadow: 1, border: '1px solid', borderColor: 'primary.main', '&:hover': { backgroundColor: 'action.hover' } }}
-                  >
-                    <AddIcon />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            {isLoadingStudents ? <TableSkeleton rows={rowsPerPage} columns={8} /> : <TableBody>
-              {displayStudents.map((student) => (
-                <TableRow key={student.id} sx={{ height: 56, cursor: 'pointer' }} onClick={() => { setDetailsStudent(student); setDetailsModalOpen(true) }}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.email}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{student.institution}</TableCell>
-                  <TableCell>{student.course}</TableCell>
-                  <TableCell>{student.progress}%</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{student.status}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{student.instructor?.name ?? student.instructorName}</TableCell>
-                  <TableCell align="right" sx={{ p: 0 }}>
-                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
-                      <Button
-                        color="primary"
-                        onClick={(e) => { e.stopPropagation(); setEditStudent(student); setEditModal(true) }}
-                        size="small"
-                        sx={{ minWidth: 32, width: 32, height: 32, p: 0 }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </Button>
-                      <Button
-                        color="error"
-                        onClick={(e) => { e.stopPropagation(); setStudentToDelete(student); setDeleteModal(true) }}
-                        size="small"
-                        sx={{ minWidth: 32, width: 32, height: 32, p: 0 }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>}
-          </Table>
-          <TablePagination
-            component="div"
-            count={students?.meta?.total || 0}
-            page={page}
-            onPageChange={(_e, p) => setPage(p)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0) }}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Filas por pagina"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-          />
-        </TableContainer>
-      </Card>
+      <StudentsTable
+        students={students?.data || []}
+        isLoading={isLoading}
+        total={students?.meta?.total || 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setPage}
+        onRowsPerPageChange={(rpp) => { setRowsPerPage(rpp); setPage(0) }}
+        onAdd={() => setOpenModal(true)}
+        onEdit={(student) => { setEditStudent(student); setEditModal(true) }}
+        onDelete={(student) => { setStudentToDelete(student); setDeleteModal(true) }}
+        onSelect={(student) => { setDetailsStudent(student); setDetailsModalOpen(true) }}
+      />
 
       <CreateStudentModal
         open={openModal}
@@ -157,7 +99,7 @@ export default function StudentsPage() {
         onSubmit={(data) => {
           createStudent.mutate(data, {
             onSuccess: () => { setOpenModal(false); feedback.showSuccess('Estudiante creado exitosamente') },
-            onError: (error: unknown) => feedback.showError(parseApiError(error)),
+            onError: handleError,
           })
         }}
       />
@@ -173,7 +115,7 @@ export default function StudentsPage() {
         onSubmit={(id, values) => {
           updateStudent.mutate({ id, values }, {
             onSuccess: () => { setEditModal(false); setEditStudent(null); feedback.showSuccess('Estudiante actualizado exitosamente') },
-            onError: (error: unknown) => feedback.showError(parseApiError(error)),
+            onError: handleError,
           })
         }}
       />
@@ -194,11 +136,12 @@ export default function StudentsPage() {
           if (studentToDelete) {
             deleteStudent.mutate(studentToDelete.id, {
               onSuccess: () => { setDeleteModal(false); setStudentToDelete(null); feedback.showSuccess('Estudiante eliminado exitosamente') },
-              onError: (error: unknown) => { feedback.showError(parseApiError(error)); setDeleteModal(false); setStudentToDelete(null) },
+              onError: (error) => { handleError(error); setDeleteModal(false); setStudentToDelete(null) },
             })
           }
         }}
       />
+
       <FeedbackToast open={feedback.open} message={feedback.message} severity={feedback.severity} onClose={feedback.close} />
     </Box>
   )

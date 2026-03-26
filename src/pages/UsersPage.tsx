@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Button, Box, TextField, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Card, TablePagination } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
-import DeleteIcon from '@mui/icons-material/Delete'
-import EditIcon from '@mui/icons-material/Edit'
+import { Box, TextField, Typography } from '@mui/material'
 import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '../features/users/hooks/useUsers'
 import type { UserRole } from '../features/users/userTypes'
 import { useLocation } from 'react-router-dom'
+import UsersTable from '../features/users/components/UsersTable'
 import CreateUserModal from '../features/users/components/CreateUserModal'
 import EditUserModal from '../features/users/components/EditUserModal'
 import UserDetailsModal from '../features/users/components/UserDetailsModal'
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 import FeedbackToast from '../components/ui/FeedbackToast'
-import TableSkeleton from '../components/ui/TableSkeleton'
 import { useFeedback } from '../hooks/useFeedback'
 import { parseApiError } from '../utils/errorUtils'
 
@@ -34,7 +31,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [search, setSearch] = useState('')
-  const { data: users, isLoading: isLoadingUsers } = useUsers(page + 1, rowsPerPage, search)
+  const { data: users, isLoading } = useUsers(page + 1, rowsPerPage, search)
   const createUser = useCreateUser()
   const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
@@ -47,6 +44,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null)
   const [userToDelete, setUserToDelete] = useState<SelectedUser | null>(null)
   const [editUser, setEditUser] = useState<EditUserState | null>(null)
+
   useEffect(() => {
     if (location.state?.openCreateModal) {
       setOpenModal(true)
@@ -57,8 +55,6 @@ export default function UsersPage() {
   const handleError = (error: unknown) => {
     feedback.showError(parseApiError(error))
   }
-
-  const displayUsers = users?.data || []
 
   return (
     <>
@@ -78,68 +74,19 @@ export default function UsersPage() {
           />
         </div>
 
-        <Card sx={{ mb: 3, backgroundColor: 'background.paper', boxShadow: 2, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-          <TableContainer component={Box} sx={{ background: 'transparent', minHeight: 0, height: '80%', maxHeight: '80%', overflowY: 'auto', overflowX: 'auto' }}>
-            <Table stickyHeader sx={{ minWidth: 600 }}>
-              <TableHead sx={{ background: 'transparent', '& .MuiTableCell-head': { background: 'transparent', borderBottom: 'none' } }}>
-                <TableRow sx={{ background: 'transparent' }}>
-                  <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Nombre completo</TableCell>
-                  <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Email</TableCell>
-                  <TableCell sx={{ color: '#8000ff', fontWeight: 'bold', background: 'transparent' }}>Rol</TableCell>
-                  <TableCell align="right" sx={{ background: 'transparent' }}>
-                    <Button
-                      variant="contained"
-                      onClick={() => setOpenModal(true)}
-                      sx={{ backgroundColor: 'background.paper', color: 'primary.main', minWidth: 0, p: 1, boxShadow: 1, border: '1px solid', borderColor: 'primary.main', '&:hover': { backgroundColor: 'action.hover' } }}
-                    >
-                      <AddIcon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              {isLoadingUsers ? <TableSkeleton rows={rowsPerPage} columns={4} /> : <TableBody>
-                {displayUsers.map((user) => (
-                  <TableRow key={user.id} sx={{ height: 56, cursor: 'pointer' }} onClick={() => { setSelectedUser({ id: user.id, email: user.email, name: user.name, role: user.role }); setDetailsModal(true) }}>
-                    <TableCell sx={{ height: 56, py: 0 }}>{user.name}</TableCell>
-                    <TableCell sx={{ height: 56, py: 0 }}>{user.email}</TableCell>
-                    <TableCell sx={{ height: 56, py: 0 }}>{user.role}</TableCell>
-                    <TableCell align="right" sx={{ p: 0, height: 56 }}>
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', alignItems: 'center', width: '100%', height: 56 }}>
-                        <Button
-                          color="primary"
-                          onClick={(e) => { e.stopPropagation(); setEditUser({ id: user.id, email: user.email, name: user.name, role: user.role }); setEditModal(true) }}
-                          size="small"
-                          sx={{ minWidth: 32, width: 32, height: 32, p: 0 }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </Button>
-                        <Button
-                          color="error"
-                          onClick={(e) => { e.stopPropagation(); setUserToDelete({ id: user.id, email: user.email, name: user.name, role: user.role }); setDeleteModal(true) }}
-                          size="small"
-                          sx={{ minWidth: 32, width: 32, height: 32, p: 0 }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>}
-            </Table>
-            <TablePagination
-              component="div"
-              count={users?.meta?.total || 0}
-              page={page}
-              onPageChange={(_e, p) => setPage(p)}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0) }}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="Filas por página"
-              labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-            />
-          </TableContainer>
-        </Card>
+        <UsersTable
+          users={users?.data || []}
+          isLoading={isLoading}
+          total={users?.meta?.total || 0}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={(rpp) => { setRowsPerPage(rpp); setPage(0) }}
+          onAdd={() => setOpenModal(true)}
+          onEdit={(user) => { setEditUser(user); setEditModal(true) }}
+          onDelete={(user) => { setUserToDelete(user); setDeleteModal(true) }}
+          onSelect={(user) => { setSelectedUser(user); setDetailsModal(true) }}
+        />
 
         <CreateUserModal
           open={openModal}
