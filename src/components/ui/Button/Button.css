@@ -1,0 +1,3 @@
+.btn{font-family:inherit;font-size:1rem;padding:.65rem 1.1rem;border:none;border-radius:.5rem;background:#2563eb;color:#fff;cursor:pointer;transition:filter .2s ease}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{filter:brightness(.95)}
