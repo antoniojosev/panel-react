@@ -3,9 +3,10 @@ export type UserRole = 'admin' | 'instructor'
 export interface User {
   id: string
   email: string
-  passwordHash: string
   name: string
   role: UserRole
+  createdAt: string
+  updatedAt: string
 }
 
 export interface UserCreateDTO {

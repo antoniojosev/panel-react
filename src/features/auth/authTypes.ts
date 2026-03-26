@@ -4,12 +4,12 @@ export interface LoginDto {
 }
 
 export interface LoginResponse {
-  accessToken: string;
+  access_token: string;
   user: {
     id: string;
     email: string;
-    fullName: string;
-    role: string;
+    name: string;
+    role: 'admin' | 'instructor';
   }
 }
 

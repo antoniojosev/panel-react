@@ -4,7 +4,7 @@ import usersReducer, { setUsers, setLoading, setError } from './usersSlice'
 describe('usersSlice', () => {
   it('sets users list', () => {
     const initial = { collection: [], status: 'idle' as const, error: null }
-    const next = usersReducer(initial, setUsers([{ id: 'u1', email: 'x@a.com', passwordHash: 'h', fullName: 'X', role: 'admin' }]))
+    const next = usersReducer(initial, setUsers([{ id: 'u1', email: 'x@a.com', name: 'X', role: 'admin', createdAt: '2025-01-01', updatedAt: '2025-01-01' }]))
     expect(next.collection).toHaveLength(1)
     expect(next.status).toBe('succeeded')
   })

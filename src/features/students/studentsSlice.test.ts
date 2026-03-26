@@ -4,7 +4,11 @@ import studentsReducer, { setStudents, setLoading, setError } from './studentsSl
 describe('studentsSlice', () => {
   it('sets students list', () => {
     const initial = { collection: [], status: 'idle' as const, error: null }
-    const next = studentsReducer(initial, setStudents([{ id: 's1', name: 'A', email: 'a@b.com', institution: 'X', assignedCourse: 'Y', progress: 10, status: 'activo', registrationDate: '2025-10-25', assignedInstructorId: 'u2' }]))
+    const next = studentsReducer(initial, setStudents([{
+      id: 's1', name: 'A', email: 'a@b.com', institution: 'X', course: 'Y',
+      progress: 10, status: 'activo', registeredAt: '2025-10-25', instructorId: 'u2',
+      instructor: { id: 'u2', name: 'Inst', email: 'i@b.com' }, instructorName: 'Inst'
+    }]))
     expect(next.collection).toHaveLength(1)
     expect(next.status).toBe('succeeded')
   })

@@ -1,9 +1,9 @@
 export type StudentStatus = 'activo' | 'inactivo' | 'completado' | 'abandonado'
 
 export interface Instructor {
-  email: "carlos@vracademy.lat"
-  id: "4433e50b-7f7c-4807-a22e-a26cd51e6fea"
-  name: "Carlos Méndez"
+  id: string
+  name: string
+  email: string
 }
 
 export interface Student {
@@ -14,10 +14,10 @@ export interface Student {
   course: string
   progress: number
   status: StudentStatus
-  registrationDate: string
-  instructorId: string,
-  instructor: Instructor;
-
+  registeredAt: string
+  instructorId: string
+  instructor: Instructor
+  instructorName: string | null
 }
 
 export interface StudentCreateDTO {
@@ -25,10 +25,9 @@ export interface StudentCreateDTO {
   email: string
   institution: string
   course: string
-  progress: number
-  status: StudentStatus
+  progress?: number
+  status?: StudentStatus
   instructorId: string
-  instructor?: Instructor;
 }
 
 export interface StudentUpdateDTO {

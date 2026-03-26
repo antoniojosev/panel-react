@@ -52,7 +52,7 @@ export default function LoginPage() {
                     />
 
                     {login.isError && (
-                    <Alert severity="error">{(login.error as any)?.response?.data?.message || 'Error al iniciar sesión'}</Alert>
+                    <Alert severity="error">{(login.error as Error)?.message || 'Error al iniciar sesión'}</Alert>
                     )}
 
                     <Button

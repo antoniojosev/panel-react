@@ -1,12 +1,11 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })
 
-// Token helpers
 const TOKEN_KEY = 'vracademy_token'
 
 export function setToken(token: string) {
@@ -21,7 +20,6 @@ export function removeToken() {
   localStorage.removeItem(TOKEN_KEY)
 }
 
-// Attach token to requests
 api.interceptors.request.use((config) => {
   const token = getToken()
   if (token) {
@@ -33,7 +31,13 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error?.response?.data ?? error),
+  (error) => {
+    if (error?.response?.status === 401) {
+      removeToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error?.response?.data ?? error)
+  },
 )
 
 export default api

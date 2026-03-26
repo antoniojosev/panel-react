@@ -12,8 +12,8 @@ import Modal from '../components/ui/Modal'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState, AppDispatch } from '../store'
-import AuthDialog from '../features/auth/components/AuthDialog'
 import { logout } from '../features/auth/authSlice'
+import { removeToken } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import { queryClient } from '../services/queryClient'
 import { useProfile } from '../features/auth/hooks/useAuth'
@@ -40,13 +40,10 @@ export default function MainLayout() {
   // Cierre de sesión completo
   const handleLogout = () => {
     dispatch(logout())
-    localStorage.clear()
-    sessionStorage.clear()
+    removeToken()
     queryClient.clear()
-    setMode('light') // Resetear modo oscuro al hacer logout
-    setTimeout(() => {
-      navigate('/login', { replace: true })
-    }, 500)
+    setMode('light')
+    navigate('/login', { replace: true })
   }
 
   // Obtener perfil del usuario autenticado
@@ -78,12 +75,12 @@ export default function MainLayout() {
             <Button color="inherit">
               <Avatar 
                 sx={{background: "#9b59b6"}}
-                alt={user?.fullName || 'Usuario'}
+                alt={user?.name || 'Usuario'}
                 className="mr-3"
               />
               <div className="flex flex-col items-start text-left">
                 <Typography variant="h6">
-                  {user?.fullName ?? 'Usuario'}
+                  {user?.name ?? 'Usuario'}
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary">
@@ -311,16 +308,6 @@ export default function MainLayout() {
           </Button>
         </Box>
       </Modal>
-
-      <AuthDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSuccess={() => {
-          setSnackbarMessage(auth.status === 'authenticated' ? 'Sesión iniciada' : 'Sesión cerrada')
-          setSnackbarSeverity('success')
-          setSnackbarOpen(true)
-        }}
-      />
 
       <Snackbar
         open={snackbarOpen}
